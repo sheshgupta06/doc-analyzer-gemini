@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Document Analyzer — Test UI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; }
+
+  .navbar { background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .navbar-left { display: flex; align-items: center; gap: 16px; }
+  .guvi-wrap { display: flex; flex-direction: column; }
+  .guvi-top { display: flex; align-items: center; gap: 8px; }
+  .guvi-icon { width: 30px; height: 30px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: white; }
+  .guvi-text { font-size: 17px; font-weight: 800; color: #1a1a1a; }
+  .guvi-tagline { font-size: 9px; color: #9ca3af; letter-spacing: 0.05em; margin-top: 1px; }
+  .nav-divider { width: 1px; height: 28px; background: #d1d5db; }
+  .hcl-logo { font-size: 20px; font-weight: 900; color: #0057a8; letter-spacing: 0.08em; }
+  .navbar-right { display: flex; align-items: center; gap: 10px; }
+  .nav-email { font-size: 12px; color: #6b7280; }
+  .nav-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 13px; color: white; font-weight: 600; }
+
+  .hero-header { background: linear-gradient(135deg, #1a3a8f 0%, #1e4fbd 40%, #2563eb 70%, #1d4ed8 100%); padding: 2.5rem 2rem; position: relative; overflow: hidden; margin-bottom: 2rem; }
+  .hero-header::before { content: ''; position: absolute; right: -60px; top: -60px; width: 280px; height: 280px; border-radius: 50%; background: rgba(255,255,255,0.06); pointer-events: none; }
+  .hero-header::after { content: ''; position: absolute; right: 80px; bottom: -80px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.04); pointer-events: none; }
+  .hero-inner { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 100px; padding: 5px 14px; font-size: 12px; color: rgba(255,255,255,0.9); font-weight: 500; margin-bottom: 14px; }
+  .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #86efac; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .hero-title { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; color: #ffffff; margin-bottom: 6px; }
+  .hero-sub { font-size: 14px; color: rgba(255,255,255,0.7); }
+
+  .container { max-width: 800px; margin: 0 auto; padding: 0 1rem 2rem; }
+
+  .header { display: none; }
+
+  .card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #a78bfa; margin-bottom: 1rem; }
+
+  .drop-zone {
+    border: 2px dashed #3a3a5c; border-radius: 12px; padding: 2.5rem;
+    text-align: center; cursor: pointer; transition: all 0.2s; position: relative;
+    background: #12122a;
+  }
+  .drop-zone:hover, .drop-zone.drag { border-color: #a78bfa; background: #1e1a3a; }
+  .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .dz-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+  .dz-text { font-size: 14px; color: #888; }
+  .dz-text strong { color: #a78bfa; }
+  .dz-types { display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+  .pill { font-size: 11px; padding: 3px 10px; border-radius: 100px; font-weight: 600; }
+  .p1 { background: #2d1f5e; color: #a78bfa; }
+  .p2 { background: #1a3a2e; color: #34d399; }
+  .p3 { background: #3a1a1a; color: #f87171; }
+
+  .file-preview { display: flex; align-items: center; gap: 12px; background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .file-icon { font-size: 1.8rem; }
+  .file-info { flex: 1; }
+  .file-name { font-size: 13px; font-weight: 600; color: #e0e0e0; }
+  .file-size { font-size: 12px; color: #888; margin-top: 2px; }
+  .remove { cursor: pointer; color: #888; font-size: 1.2rem; padding: 4px; }
+  .remove:hover { color: #f87171; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  label { display: block; font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  input[type=text] { width: 100%; background: #12122a; border: 1px solid #2a2a4a; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #e0e0e0; outline: none; transition: border 0.15s; }
+  input[type=text]:focus { border-color: #a78bfa; }
+
+  .analyze-btn {
+    width: 100%; padding: 14px; border-radius: 12px;
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    color: white; border: none; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 1rem;
+  }
+  .analyze-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result-card { animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+  .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; margin-bottom: 1rem; }
+  .status-success { background: #1a3a2e; color: #34d399; }
+  .status-error { background: #3a1a1a; color: #f87171; }
+
+  .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .section-label::before { content: ''; display: block; width: 3px; height: 14px; border-radius: 2px; background: #a78bfa; }
+
+  .summary-box { background: #12122a; border-left: 3px solid #a78bfa; border-radius: 0 8px 8px 0; padding: 12px 16px; font-size: 14px; line-height: 1.7; color: #ccc; margin-bottom: 1.2rem; }
+
+  .entities-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.2rem; }
+  .entity-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px; padding: 12px; }
+  .entity-type { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .entity-val { font-size: 13px; color: #e0e0e0; padding: 3px 0; border-bottom: 1px solid #1a1a2e; }
+  .entity-val:last-child { border-bottom: none; }
+  .entity-empty { font-size: 12px; color: #555; font-style: italic; }
+
+  .sentiment-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 1.2rem; }
+  .sent-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 100px; font-weight: 700; font-size: 15px; }
+  .sent-positive { background: #1a3a2e; color: #34d399; }
+  .sent-neutral { background: #2d1f5e; color: #a78bfa; }
+  .sent-negative { background: #3a1a1a; color: #f87171; }
+  .sent-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .sent-positive .sent-dot { background: #34d399; }
+  .sent-neutral .sent-dot { background: #a78bfa; }
+  .sent-negative .sent-dot { background: #f87171; }
+
+  .json-block { background: #0a0a15; border-radius: 10px; padding: 16px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; color: #ccc; position: relative; }
+  .copy-json { position: absolute; top: 10px; right: 10px; font-size: 11px; padding: 4px 12px; border-radius: 6px; background: #2a2a4a; border: 1px solid #3a3a5c; color: #888; cursor: pointer; }
+  .copy-json:hover { background: #3a3a5c; color: #e0e0e0; }
+
+  .error-box { background: #3a1a1a; border-left: 3px solid #f87171; border-radius: 0 8px 8px 0; padding: 12px 16px; font-size: 13px; color: #f87171; }
+
+  @media(max-width:600px) {
+    .field-row { grid-template-columns: 1fr; }
+    .entities-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Navbar -->
+<nav class="navbar">
+  <div class="navbar-left">
+    <img src="https://hackathon.guvi.in/images/webps/guviHclLogoText.webp" alt="GUVI HCL" style="height:36px;object-fit:contain;" />
+  </div>
+  <div class="navbar-right">
+    <span class="nav-email">sheshgupta969613@gmail.com</span>
+    <div class="nav-avatar">S</div>
+  </div>
+</nav>
+
+<!-- Hero Header -->
+<div class="hero-header">
+  <div class="hero-inner">
+    <div class="hero-badge"><div class="hero-badge-dot"></div> Hackathon Challenge</div>
+    <div class="hero-title">GUVI Hackathon 2026 — Intern Hiring</div>
+    <div class="hero-sub">Track 2: AI-Powered Document Analysis &amp; Extraction</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Upload Card -->
+  <div class="card">
+    <div class="card-title">📁 Document Upload</div>
+
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.bmp,.tiff" />
+      <div class="dz-icon">📄</div>
+      <div class="dz-text"><strong>Click & choose the file</strong><br>or drag & drop</div>
+      <div class="dz-types">
+        <span class="pill p1">PDF</span>
+        <span class="pill p2">DOCX</span>
+        <span class="pill p3">IMAGE</span>
+      </div>
+    </div>
+
+    <div id="filePreview" style="display:none;"></div>
+  </div>
+
+  <!-- Config Card -->
+  <div class="card">
+    <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleSettings()">
+      <span>⚙️ API Settings</span>
+      <span id="settingsToggleIcon" style="font-size:12px;color:#888;background:#2a2a4a;padding:3px 10px;border-radius:100px;">Show ▼</span>
+    </div>
+    <div id="settingsBody" style="display:none; margin-top:1rem;">
+      <div class="field-row">
+        <div>
+          <label>API Endpoint</label>
+          <input type="text" id="apiEndpoint" value="http://localhost:8000/api/document-analyze" />
+        </div>
+        <div>
+          <label>API Key</label>
+          <input type="text" id="apiKey" value="sk_track2_987654321" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analyze Button -->
+  <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">
+    ✦ Analyze this Document
+  </button>
+
+  <!-- Error -->
+  <div id="errorBox" style="display:none; margin-top:1.5rem;"></div>
+
+  <!-- Results -->
+  <div id="results" style="display:none; margin-top:1.5rem;"></div>
+
+</div>
+
+<script>
+function toggleSettings() {
+  const body = document.getElementById('settingsBody');
+  const icon = document.getElementById('settingsToggleIcon');
+  const isHidden = body.style.display === 'none';
+  body.style.display = isHidden ? 'block' : 'none';
+  icon.textContent = isHidden ? 'Hide ▲' : 'Show ▼';
+}
+
+let uploadedFile = null;
+let uploadedB64 = '';
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+function handleFile(file) {
+  if (!file) return;
+  uploadedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    uploadedB64 = e.target.result.split(',')[1];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const icons = { pdf:'📄', docx:'📝', doc:'📝', png:'🖼️', jpg:'🖼️', jpeg:'🖼️', bmp:'🖼️', tiff:'🖼️' };
+    document.getElementById('filePreview').style.display = 'block';
+    document.getElementById('filePreview').innerHTML = `
+      <div class="file-preview">
+        <div class="file-icon">${icons[ext] || '📄'}</div>
+        <div class="file-info">
+          <div class="file-name">${file.name}</div>
+          <div class="file-size">${(file.size/1024).toFixed(1)} KB · ${ext.toUpperCase()}</div>
+        </div>
+        <span class="remove" onclick="clearFile()">✕</span>
+      </div>`;
+    dropZone.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearFile() {
+  uploadedFile = null; uploadedB64 = '';
+  document.getElementById('filePreview').style.display = 'none';
+  document.getElementById('filePreview').innerHTML = '';
+  dropZone.style.display = 'block';
+  fileInput.value = '';
+}
+
+function getFileType(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  if (ext === 'pdf') return 'pdf';
+  if (['docx','doc'].includes(ext)) return 'docx';
+  return 'image';
+}
+
+async function analyze() {
+  if (!uploadedFile) { showError('First upload a file!'); return; }
+
+  const endpoint = document.getElementById('apiEndpoint').value.trim();
+  const apiKey = document.getElementById('apiKey').value.trim();
+
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Analyzing...';
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey
+      },
+      body: JSON.stringify({
+        fileName: uploadedFile.name,
+        fileType: getFileType(uploadedFile.name),
+        fileBase64: uploadedB64
+      })
+    });
+
+    const data = await res.json();
+    showResults(data);
+  } catch(e) {
+    showError('Server is not connected! Please check : http://localhost:8000');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✦ Analyze this Document';
+  }
+}
+
+function showResults(data) {
+  const ent = data.entities || {};
+  const entityTypes = [
+    { key:'names', label:'👤 Names', },
+    { key:'dates', label:'📅 Dates' },
+    { key:'organizations', label:'🏢 Organizations' },
+    { key:'amounts', label:'💰 Amounts' }
+  ];
+
+  const entCards = entityTypes.map(({key, label}) => {
+    const vals = ent[key] || [];
+    const content = vals.length
+      ? vals.map(v => `<div class="entity-val">${v}</div>`).join('')
+      : '<div class="entity-empty">No entities found</div>';
+    return `<div class="entity-card"><div class="entity-type">${label}</div>${content}</div>`;
+  }).join('');
+
+  const sc = { Positive:'sent-positive', Neutral:'sent-neutral', Negative:'sent-negative' }[data.sentiment] || 'sent-neutral';
+  const se = { Positive:'😊', Neutral:'😐', Negative:'😔' }[data.sentiment] || '😐';
+
+  const isError = data.status === 'error';
+  const statusHtml = isError
+    ? `<div class="status-badge status-error">❌ Error</div>`
+    : `<div class="status-badge status-success">✅ Success</div>`;
+
+  const json = JSON.stringify(data, null, 2);
+
+  document.getElementById('results').innerHTML = `
+    <div class="card result-card">
+      <div class="card-title">📊 Analysis Results</div>
+      ${statusHtml}
+      ${isError ? `<div class="error-box">${data.message}</div>` : `
+        <div class="section-label">Summary</div>
+        <div class="summary-box">${data.summary || 'No summary'}</div>
+
+        <div class="section-label">Entities</div>
+        <div class="entities-grid">${entCards}</div>
+
+        <div class="section-label">Sentiment</div>
+        <div class="sentiment-wrap">
+          <div class="sent-badge ${sc}">
+            <div class="sent-dot"></div>
+            ${se} ${data.sentiment}
+          </div>
+        </div>
+      `}
+      <div class="section-label">Raw JSON Response</div>
+      <div class="json-block">
+        <button class="copy-json" onclick="copyJson()">Copy</button>
+        <pre id="jsonPre">${json}</pre>
+      </div>
+    </div>`;
+
+  window._lastJson = json;
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showError(msg) {
+  document.getElementById('errorBox').innerHTML = `<div class="error-box">⚠️ ${msg}</div>`;
+  document.getElementById('errorBox').style.display = 'block';
+}
+
+function copyJson() {
+  if (window._lastJson) navigator.clipboard.writeText(window._lastJson);
+}
+</script>
+</body>
+</html>
