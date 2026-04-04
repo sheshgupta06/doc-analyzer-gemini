@@ -174,7 +174,7 @@
       <div class="field-row">
         <div>
           <label>API Endpoint</label>
-          <input type="text" id="apiEndpoint" value="http://localhost:8000/api/document-analyze" />
+          <input type="text" id="apiEndpoint" value="https://doc-analyzer-gemini.vercel.app/api/document-analyze" />
         </div>
         <div>
           <label>API Key</label>
@@ -285,7 +285,7 @@ async function analyze() {
     const data = await res.json();
     showResults(data);
   } catch(e) {
-    showError('Server is not connected! Please check : http://localhost:8000');
+    showError('API se connect nahi ho paya! Please try again.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '✦ Analyze this Document';

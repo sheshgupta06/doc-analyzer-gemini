@@ -153,7 +153,7 @@ def root():
     return {
         "message": "AI Document Analyzer API is running!",
         "docs": "/docs",
-        "powered_by": "Google Gemini 1.5 Flash"
+        "powered_by": "Google Gemini 2.5 Flash"
     }
 
 
