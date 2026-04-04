@@ -83,14 +83,28 @@ def extract_text_from_docx(data: bytes) -> str:
 
 def extract_text_from_image(data: bytes) -> str:
     try:
-        import pytesseract
-        from PIL import Image
-        img = Image.open(io.BytesIO(data))
-        text = pytesseract.image_to_string(img, lang="eng")
-        return text
-    except Exception as e:
-        raise ValueError(f"OCR extraction failed: {e}")
+        import base64 as b64
+        image_b64 = b64.b64encode(data).decode('utf-8')
 
+        if data[:4] == b'\x89PNG':
+            mime = 'image/png'
+        elif data[:2] == b'\xff\xd8':
+            mime = 'image/jpeg'
+        else:
+            mime = 'image/jpeg'
+
+        response = model.generate_content([
+            {
+                "inline_data": {
+                    "mime_type": mime,
+                    "data": image_b64
+                }
+            },
+            "Extract all text from this image. Return only the extracted text, nothing else."
+        ])
+        return response.text.strip()
+    except Exception as e:
+        raise ValueError(f"Image extraction failed: {e}")
 
 def extract_text(file_type: str, b64: str) -> str:
     data = base64.b64decode(b64)
