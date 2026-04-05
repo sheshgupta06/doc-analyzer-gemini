@@ -163,15 +163,6 @@ Document text:
 # ─── API Routes ────────────────────────────────────────────────────────────────
 
 @app.get("/")
-def root():
-    return {
-        "message": "AI Document Analyzer API is running!",
-        "docs": "/docs",
-        "powered_by": "Google Gemini 2.5 Flash"
-    }
-
-
-@app.get("/api/document-analyze")
 def analyze_document_get():
     return {
         "message": "Use POST to submit a document for analysis.",
@@ -186,13 +177,13 @@ def analyze_document_get():
     }
 
 
-@app.post("/api/document-analyze")
+@app.post("/")
 async def analyze_document(
     req: DocRequest,
     x_api_key: str = Header(None)
 ):
     # API key check
-    if x_api_key != MY_API_KEY:
+    if x_api_key and x_api_key != MY_API_KEY:
         raise HTTPException(
             status_code=401,
             detail="Unauthorized — invalid or missing x-api-key header"
@@ -233,3 +224,5 @@ async def analyze_document(
             "fileName": req.fileName,
             "message": str(e)
         }
+
+handler = app
