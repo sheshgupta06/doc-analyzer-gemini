@@ -162,7 +162,7 @@ Document text:
 
 # ─── API Routes ────────────────────────────────────────────────────────────────
 
-@app.get("/")
+@app.get("/api/document-analyze")
 def analyze_document_get():
     return {
         "message": "Use POST to submit a document for analysis.",
@@ -177,7 +177,7 @@ def analyze_document_get():
     }
 
 
-@app.post("/")
+@app.post("/api/document-analyze")
 async def analyze_document(
     req: DocRequest,
     x_api_key: str = Header(None)
