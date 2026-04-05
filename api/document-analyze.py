@@ -121,6 +121,21 @@ def extract_text(file_type: str, b64: str) -> str:
 
 # ─── AI Analysis with Gemini ───────────────────────────────────────────────────
 
+
+def extract_entities(text):
+    names = re.findall(r'\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)+\b', text)
+    dates = re.findall(r'\b\d{2}/\d{2}/\d{4}\b', text)
+    dates += re.findall(r'\b\d{1,2} \w+ \d{4}\b', text)
+    amounts = re.findall(r'₹\s?\d+(?:,\d+)*', text)
+    orgs = re.findall(r'\b[A-Z][A-Za-z]+(?:\s[A-Z][A-Za-z]+)*(?: Ltd| Pvt Ltd| Inc| Corporation| Company)\b', text)
+
+    return {
+        "names": list(set(names)),
+        "dates": list(set(dates)),
+        "organizations": list(set(orgs)),
+        "amounts": list(set(amounts))
+    }
+
 def analyze_with_gemini(text: str) -> dict:
     prompt = f"""You are a document analysis expert. Analyze the following document text carefully.
 
@@ -146,7 +161,13 @@ Rules:
 Document text:
 {text[:4000]}"""
 
-    response = model.generate_content(prompt)
+    response = model.generate_content(
+        prompt,
+        generation_config={
+            "temperature": 0.2
+        }
+    )
+
     raw = response.text.strip()
 
     # Remove markdown code fences if Gemini adds them
@@ -202,17 +223,22 @@ async def analyze_document(
 
         # Step 2: Analyze with Gemini
         result = analyze_with_gemini(text)
+        rule_entities = extract_entities(text)
+        ai_entities = result.get("entities", {})
+
+        final_entities = {
+            "names": list(set(rule_entities["names"] + ai_entities.get("names", []))),
+            "dates": list(set(rule_entities["dates"] + ai_entities.get("dates", []))),
+            "organizations": list(set(rule_entities["organizations"] + ai_entities.get("organizations", []))),
+            "amounts": list(set(rule_entities["amounts"] + ai_entities.get("amounts", [])))
+        }
+
 
         return {
             "status": "success",
             "fileName": req.fileName,
             "summary": result.get("summary", ""),
-            "entities": result.get("entities", {
-                "names": [],
-                "dates": [],
-                "organizations": [],
-                "amounts": []
-            }),
+            "entities": final_entities,
             "sentiment": result.get("sentiment", "Neutral")
         }
 
