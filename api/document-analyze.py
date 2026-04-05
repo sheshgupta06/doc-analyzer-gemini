@@ -4,7 +4,7 @@ import json
 import re
 import io
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -173,10 +173,7 @@ def analyze_get():
 
 
 @app.post("/api/document-analyze")
-async def analyze_document(
-    req: DocRequest,
-    x_api_key: str = Header(None)
-):
+async def analyze_document(request: Request, x_api_key: str = Header(None)):
     # Strict API key check
     if x_api_key != MY_API_KEY:
         raise HTTPException(
@@ -185,13 +182,18 @@ async def analyze_document(
         )
 
     try:
+        data = await request.json()
+        fileName = data.get('fileName', '')
+        fileType = data.get('fileType', '')
+        fileBase64 = data.get('fileBase64', '')
+
         # Step 1: Extract text
-        text = extract_text(req.fileType, req.fileBase64)
+        text = extract_text(fileType, fileBase64)
 
         if not text or not text.strip():
             return {
                 "status": "error",
-                "fileName": req.fileName,
+                "fileName": fileName,
                 "message": "No text could be extracted from the document."
             }
 
@@ -200,7 +202,7 @@ async def analyze_document(
 
         return {
             "status": "success",
-            "fileName": req.fileName,
+            "fileName": fileName,
             "summary": result.get("summary", ""),
             "entities": {
                 "names": result.get("entities", {}).get("names", []),
@@ -216,7 +218,7 @@ async def analyze_document(
     except Exception as e:
         return {
             "status": "error",
-            "fileName": req.fileName,
+            "fileName": data.get('fileName', ''),
             "message": str(e)
         }
 
