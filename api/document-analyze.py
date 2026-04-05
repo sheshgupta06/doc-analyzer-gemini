@@ -171,6 +171,21 @@ def root():
     }
 
 
+@app.get("/api/document-analyze")
+def analyze_document_get():
+    return {
+        "message": "Use POST to submit a document for analysis.",
+        "endpoint": "/api/document-analyze",
+        "method": "POST",
+        "required_headers": ["Content-Type: application/json", "x-api-key"],
+        "body_example": {
+            "fileName": "doc.pdf",
+            "fileType": "pdf",
+            "fileBase64": "..."
+        }
+    }
+
+
 @app.post("/api/document-analyze")
 async def analyze_document(
     req: DocRequest,
